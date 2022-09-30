@@ -58,7 +58,7 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
             return "Request timed out."
 
         timeReceived = time.time()
-        recPacket, addr = mySocket.recvfrom(1024)
+        recvPacket, addr = mySocket.recvfrom(1024)
 
         #---------------#
         # Fill in start #
@@ -66,15 +66,25 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
 
             # TODO: Fetch the ICMP header from the IP packet
 
+        icmph = recvPacket[20:28]
+        type, code, checksum, pID, sq = struct.unpack("bbHHh", icmph)
+        
+        print ("ICMP header is ",type, code, checksum, pID, sq)
+        if pID == ID:
+            bytesinDbl = struct.calcsize("d")
+            timeSent = struct.unpack("d", recvPacket[28:28 + bytesinDbl])[0]
+            rtt=timeReceived - timeSent
+            
+            print ("RTT is : ")
+            return rtt
+            
         #-------------#
         # Fill in end #
         #-------------#
 
-        timeLeft = timeLeft - howLongInSelect 
-        
+        timeLeft = timeLeft - howLongInSelect
         if timeLeft <= 0:
-            return "Request timed out."
-
+         return "Request timed out."
 
 
 def sendOnePing(mySocket, destAddr, ID):
@@ -136,7 +146,7 @@ def ping(host, timeout=1):
         delay = doOnePing(dest, timeout) 
         print(delay)
         time.sleep(1) # one second 
-    return delay
 
 # Runs program
-ping("google.com")
+if __name__ == "__main__":
+    ping("google.com")
